@@ -1,13 +1,15 @@
 ﻿using System;
 
-namespace AI.FluentFiniteStateMachine
+namespace AI.FluentFSM.Runtime.Transitions
 {
     public class Transition : ITransition
     {
+        public Type To { get; }
+        
+        Type ITransition.From => _from;
+
         public bool CanTranslate(Type currentState) => 
             _from == currentState && _conditionMethod();
-
-        public Type To { get; }
 
         private readonly Func<bool> _conditionMethod;
         private readonly Type _from;

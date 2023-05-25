@@ -1,5 +1,5 @@
 {
-    "name": "AI.FluentFiniteStateMachine",
+    "name": "AI.FluentFSM.Runtime",
     "rootNamespace": "",
     "references": [],
     "includePlatforms": [],

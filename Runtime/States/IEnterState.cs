@@ -1,4 +1,4 @@
-﻿namespace AI.FluentFiniteStateMachine
+﻿namespace AI.FluentFSM.Runtime.States
 {
     public interface IEnterState
     {
