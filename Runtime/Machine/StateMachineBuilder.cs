@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using AI.FluentFSM.Runtime.States;
 using AI.FluentFSM.Runtime.Transitions;
 using UnityEngine;
@@ -8,24 +10,28 @@ namespace AI.FluentFSM.Runtime.Machine
     public class StateMachineBuilder
     {
         private readonly StateMachine _stateMachine;
-        private ITransition[] _transitions;
+        private readonly IState _originState;
+        private readonly List<IState> _states = new();
+        private readonly List<ITransition> _transitions = new();
 
-        public StateMachineBuilder() => 
-            _stateMachine = new StateMachine();
-
-        public StateMachineBuilder WithStates(IState startState, params IState[] states)
+        public StateMachineBuilder(IState firstState)
         {
-            _stateMachine.States = states
-                .Concat(new[] { startState })
-                .ToDictionary(x => x.GetType(), y => y);
-            _stateMachine.CurrentStateType = startState.GetType();
+            _originState = firstState;
+            _stateMachine = new();
+        }
+
+        public StateMachineBuilder WithState(IState state)
+        {
+            if (_states.Exists(x => x.GetType() == state.GetType()) || _originState != null  && _originState.GetType() == state.GetType())
+                throw new($"State with type {state.GetType().Name} already contains in state machine!");
             
+            _states.Add(state);
             return this;
         }
 
-        public StateMachineBuilder WithTransitions(params ITransition[] transitions)
+        public StateMachineBuilder WithTransition(Type fromState, Type toState, Func<bool> condition)
         {
-            _transitions = transitions;
+            _transitions.Add(new Transition(fromState, toState, condition));
             return this;
         }
 
@@ -43,8 +49,17 @@ namespace AI.FluentFSM.Runtime.Machine
 
         public StateMachine Build()
         {
+            SetupStates();
             SetupTransitions();
             return _stateMachine;
+        }
+
+        private void SetupStates()
+        {
+            _stateMachine.States = _states
+                .Concat(new[] { _originState })
+                .ToDictionary(x => x.GetType(), y => y);
+            _stateMachine.CurrentStateType = _originState.GetType();
         }
 
         private void SetupTransitions() =>

@@ -2,7 +2,7 @@
 
 namespace AI.FluentFSM.Runtime.Transitions
 {
-    public class Transition : ITransition
+    internal class Transition : ITransition
     {
         public Type To { get; }
         

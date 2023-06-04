@@ -2,7 +2,7 @@ using System;
 
 namespace AI.FluentFSM.Runtime.Transitions
 {
-    public interface ITransition
+    internal interface ITransition
     {
         Type To { get; }
         internal Type From { get; }
