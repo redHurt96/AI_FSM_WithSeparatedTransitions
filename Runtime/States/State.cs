@@ -2,9 +2,9 @@ namespace AI.FluentFSM.Runtime.States
 {
     public abstract class State<TContext> : IState
     {
-        protected readonly TContext _context;
+        protected readonly TContext Context;
         
         protected State(TContext context) => 
-            _context = context;
+            Context = context;
     }
 }

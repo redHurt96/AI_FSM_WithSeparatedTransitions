@@ -8,8 +8,8 @@ namespace AI.FluentFSM.Runtime.Transitions
         
         Type ITransition.From => _from;
 
-        public bool CanTranslate(Type currentState) => 
-            _from == currentState && _conditionMethod();
+        public bool CanTranslate(Type currentState) =>
+            (_from == currentState || currentState.IsSubclassOf(_from)) && _conditionMethod();
 
         private readonly Func<bool> _conditionMethod;
         private readonly Type _from;

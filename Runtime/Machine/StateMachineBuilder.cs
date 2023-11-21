@@ -9,17 +9,30 @@ namespace AI.FluentFSM.Runtime.Machine
 {
     public class StateMachineBuilder
     {
-        private readonly StateMachine _stateMachine;
-        private readonly IState _originState;
+        private StateMachine _stateMachine;
+        private IState _originState;
+
         private readonly List<IState> _states = new();
         private readonly List<ITransition> _transitions = new();
+        private string _name;
+        private GameObject _gameObjectReference;
 
-        public StateMachineBuilder(IState firstState)
+        public StateMachineBuilder SelectFirstState<T>() where T : IState
         {
-            _originState = firstState;
-            _stateMachine = new();
+            _originState = _states.First(
+                x => x.GetType() == typeof(T) 
+                     || x.GetType().IsSubclassOf(typeof(T)));
+            return this;
         }
 
+        public StateMachineBuilder WithState(IState state, Func<bool> canAddState)
+        {
+            if (canAddState.Invoke())
+                WithState(state);
+
+            return this;
+        }
+        
         public StateMachineBuilder WithState(IState state)
         {
             if (_states.Exists(x => x.GetType() == state.GetType()) || _originState != null  && _originState.GetType() == state.GetType())
@@ -29,6 +42,15 @@ namespace AI.FluentFSM.Runtime.Machine
             return this;
         }
 
+        public StateMachineBuilder WithTransition<TFrom, TTo>(Func<bool> condition)
+            where TFrom : IState
+            where TTo : IState
+        {
+            _transitions.Add(new Transition(typeof(TFrom), typeof(TTo), condition));
+            return this;
+        }
+        
+        [Obsolete]
         public StateMachineBuilder WithTransition(Type fromState, Type toState, Func<bool> condition)
         {
             _transitions.Add(new Transition(fromState, toState, condition));
@@ -37,27 +59,34 @@ namespace AI.FluentFSM.Runtime.Machine
 
         public StateMachineBuilder WithName(string name)
         {
-            _stateMachine.Name = name;
+            _name = name;
             return this;
         }
 
         public StateMachineBuilder WithGameObjectReference(GameObject gameObject)
         {
-            _stateMachine.Reference = gameObject;
+            _gameObjectReference = gameObject;
             return this;
         }
 
         public StateMachine Build()
         {
+            _stateMachine = new();
             SetupStates();
             SetupTransitions();
+
+            if (!string.IsNullOrEmpty(_name))
+                _stateMachine.Name = _name;
+            
+            if (_gameObjectReference != null)
+                _stateMachine.Reference = _gameObjectReference;
+            
             return _stateMachine;
         }
 
         private void SetupStates()
         {
             _stateMachine.States = _states
-                .Concat(new[] { _originState })
                 .ToDictionary(x => x.GetType(), y => y);
             _stateMachine.CurrentStateType = _originState.GetType();
         }

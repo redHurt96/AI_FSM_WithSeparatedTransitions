@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using AI.FluentFSM.Runtime.States;
 using AI.FluentFSM.Runtime.Transitions;
 using UnityEngine;
@@ -8,8 +9,15 @@ namespace AI.FluentFSM.Runtime.Machine
 {
     public class StateMachine
     {
-        private IState Current => States[CurrentStateType];
-        private ITransition[] CurrentTransitions => Transitions[CurrentStateType];
+        public string CurrentStateName => CurrentStateType.Name;
+
+        private IState Current => States.ContainsKey(CurrentStateType)
+            ? States[CurrentStateType]
+            : States.First(x => x.Key.IsSubclassOf(CurrentStateType)).Value;
+
+        private ITransition[] CurrentTransitions => Transitions.ContainsKey(CurrentStateType)
+            ? Transitions[CurrentStateType]
+            : Transitions.First(x => CurrentStateType.IsSubclassOf(x.Key)).Value;
         
         internal Type CurrentStateType;
         internal Dictionary<Type, IState> States;
@@ -17,8 +25,14 @@ namespace AI.FluentFSM.Runtime.Machine
         internal GameObject Reference;
         internal Dictionary<Type, ITransition[]> Transitions;
 
-        public void Run() => 
+        public StateMachine Run()
+        {
+            Debug.Log($"<b>{Name}</b>: Enter -> {CurrentStateType.Name}</color>", Reference);
+
             EnterCurrent();
+            
+            return this;
+        }
 
         public void Update()
         {
@@ -64,6 +78,12 @@ namespace AI.FluentFSM.Runtime.Machine
         {
             if (Current is IEnterState enterState)
                 enterState.OnEnter();
+        }
+
+        public void FixedUpdate()
+        {
+            if (Current is IFixedUpdateState fixedUpdateState)
+                fixedUpdateState.OnFixedUpdate();
         }
     }
 }
